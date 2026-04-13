@@ -162,17 +162,23 @@
       const form = document.getElementById('formNup');
       const kdBarang = form.kdBarang.value;
       const nup = form.nup.value;
-      if(!kdBarang || !nup) return alert("Isi Kode Barang dan NUP");
+      if(!kdBarang || !nup) return alert("Isi Kode Barang dan NUP terlebih dahulu");
 
       try {
-        // Fetch API logic here (Requires CORS handled in GAS)
         const res = await fetch(`${GAS_WEB_APP_URL}?api=getBMNInfo&kdBarang=${kdBarang}&nup=${nup}`);
         const result = await res.json();
+        
         if(result.success) {
+           // Jika data ditemukan, isi form otomatis
            form.nmBarang.value = result.data.nmBarang;
+        } else {
+           // Jika data tidak ditemukan
+           alert(result.message);
+           form.nmBarang.value = ""; // Kosongkan kembali form
         }
       } catch (err) {
-        console.error("Auto-fill fail (expected if testing locally without setup):", err);
+        console.error("Auto-fill fail:", err);
+        alert("Gagal menghubungi server database.");
       }
     }
 
