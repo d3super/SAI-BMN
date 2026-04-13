@@ -207,9 +207,11 @@
         
         if(result.success) {
            form.nmBarang.value = result.data.nmBarang;
+           form.lokRuang.value = result.data.lokRuang; // Tambahan: auto-fill lokasi ruang
         } else {
            alert(result.message);
            form.nmBarang.value = "";
+           form.lokRuang.value = ""; // Kosongkan jika data tidak ditemukan
         }
       } catch (err) {
         console.error("Auto-fill fail:", err);
@@ -301,6 +303,15 @@
       if (!payload.fotoBase64) {
          alert("Silakan ambil foto fisik terlebih dahulu melalui tombol Kamera!");
          return;
+      }
+
+      // --- GENERATE ID_BMN OTOMATIS ---
+      if (formId === 'formNup') {
+        // Format untuk BMN: KodeBarang-NUP
+        payload.id_bmn = `${payload.kdBarang}-${payload.nup}`;
+      } else {
+        // Format untuk NON NUP: NON-Timestamp
+        payload.id_bmn = `NON-${Date.now()}`;
       }
 
       btnText.innerText = "Mengunggah...";
