@@ -78,7 +78,16 @@
       <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Foto Fisik</label>
-          <input type="file" accept="image/*" capture="environment" id="fotoNup" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+          <div class="flex flex-col space-y-3">
+            <!-- Tombol untuk buka kamera (Menggantikan input file) -->
+            <button type="button" onclick="openCamera('Nup')" class="bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 rounded-md flex items-center justify-center hover:bg-gray-100 transition font-medium">
+              <i class="ph ph-camera text-xl mr-2"></i> Buka Kamera
+            </button>
+            <!-- Preview Foto -->
+            <img id="previewNup" src="" class="hidden w-full h-auto rounded-md border border-gray-200 shadow-sm object-cover">
+            <!-- Hidden input untuk menampung base64 foto -->
+            <input type="hidden" id="fotoDataNup" name="fotoBase64">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Petugas</label>
@@ -122,7 +131,13 @@
        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Foto Fisik</label>
-          <input type="file" accept="image/*" capture="environment" id="fotoNonNup" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+          <div class="flex flex-col space-y-3">
+            <button type="button" onclick="openCamera('NonNup')" class="bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 rounded-md flex items-center justify-center hover:bg-gray-100 transition font-medium">
+              <i class="ph ph-camera text-xl mr-2"></i> Buka Kamera
+            </button>
+            <img id="previewNonNup" src="" class="hidden w-full h-auto rounded-md border border-gray-200 shadow-sm object-cover">
+            <input type="hidden" id="fotoDataNonNup" name="fotoBase64">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Petugas</label>
@@ -137,6 +152,28 @@
     </form>
 
   </main>
+
+  <!-- MODAL KAMERA -->
+  <div id="cameraModal" class="hidden fixed inset-0 bg-black z-[100] flex flex-col">
+    <div class="flex justify-between items-center p-4 text-white bg-black/50 absolute top-0 left-0 right-0 z-10">
+      <h2 class="text-lg font-semibold">Kamera Aktif</h2>
+      <button type="button" onclick="closeCamera()" class="p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+    </div>
+    
+    <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+      <video id="videoStream" autoplay playsinline class="w-full h-full object-cover"></video>
+    </div>
+    
+    <div class="p-6 bg-black flex justify-center pb-12">
+      <!-- Tombol Shutter -->
+      <button type="button" onclick="capturePhoto()" class="w-16 h-16 bg-white rounded-full border-4 border-gray-400 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-95 active:bg-gray-200 transition">
+      </button>
+    </div>
+    <!-- Canvas disembunyikan, hanya digunakan untuk memproses frame video menjadi gambar -->
+    <canvas id="cameraCanvas" class="hidden"></canvas>
+  </div>
 
   <script>
     // --- CONFIGURATION ---
@@ -157,7 +194,7 @@
       setTimeout(() => t.classList.add('hidden'), 3000);
     }
 
-    // --- API & DATA LOGIC ---
+    // --- API LOGIC (Auto Fill) ---
     async function autoFillNup() {
       const form = document.getElementById('formNup');
       const kdBarang = form.kdBarang.value;
@@ -169,12 +206,10 @@
         const result = await res.json();
         
         if(result.success) {
-           // Jika data ditemukan, isi form otomatis
            form.nmBarang.value = result.data.nmBarang;
         } else {
-           // Jika data tidak ditemukan
            alert(result.message);
-           form.nmBarang.value = ""; // Kosongkan kembali form
+           form.nmBarang.value = "";
         }
       } catch (err) {
         console.error("Auto-fill fail:", err);
@@ -182,57 +217,97 @@
       }
     }
 
-    // Image Compression utility
-    function compressImage(file, callback) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = event => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          const MAX_WIDTH = 800;
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          callback(canvas.toDataURL('image/jpeg', 0.6));
-        }
+    // --- CAMERA LOGIC (WebRTC) ---
+    let currentCameraTarget = '';
+    let videoStream = null;
+
+    function openCamera(target) {
+      currentCameraTarget = target;
+      const modal = document.getElementById('cameraModal');
+      const video = document.getElementById('videoStream');
+      
+      modal.classList.remove('hidden');
+
+      // Meminta akses kamera (Kamera belakang jika tersedia pada HP)
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+          videoStream = stream;
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error("Gagal akses kamera:", err);
+          alert("Gagal mengakses kamera. Pastikan browser Anda memiliki izin kamera.");
+          closeCamera();
+        });
+    }
+
+    function closeCamera() {
+      const modal = document.getElementById('cameraModal');
+      modal.classList.add('hidden');
+      
+      // Matikan stream kamera saat modal ditutup
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
       }
     }
 
-    async function handleFormSubmit(e, formId, fileInputId) {
+    function capturePhoto() {
+      const video = document.getElementById('videoStream');
+      const canvas = document.getElementById('cameraCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Setup ukuran kompresi gambar (maksimal 800px)
+      const MAX_WIDTH = 800;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Gambar frame saat ini ke canvas
+      ctx.drawImage(video, 0, 0, width, height);
+      
+      // Konversi canvas ke base64 (JPEG, quality 0.6 untuk kompresi ukuran file)
+      const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+      
+      // Tampilkan preview di form
+      const previewImg = document.getElementById('preview' + currentCameraTarget);
+      previewImg.src = dataURL;
+      previewImg.classList.remove('hidden');
+      
+      // Simpan data base64 ke input hidden
+      document.getElementById('fotoData' + currentCameraTarget).value = dataURL;
+      
+      closeCamera();
+    }
+
+    // --- FORM SUBMIT LOGIC ---
+    async function handleFormSubmit(e, formId) {
       e.preventDefault();
       const form = document.getElementById(formId);
       const btnText = form.querySelector('.btn-text');
       const loader = form.querySelector('.loader');
-      const fileInput = document.getElementById(fileInputId);
       
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+
+      // Validasi manual apakah foto sudah diambil
+      if (!payload.fotoBase64) {
+         alert("Silakan ambil foto fisik terlebih dahulu melalui tombol Kamera!");
+         return;
+      }
+
       btnText.innerText = "Mengunggah...";
       loader.classList.remove('hidden');
       form.querySelector('button[type="submit"]').disabled = true;
 
-      const formData = new FormData(form);
-      const payload = Object.fromEntries(formData.entries());
-
-      const file = fileInput.files[0];
-      if (file) {
-        compressImage(file, async (base64) => {
-          payload.fotoBase64 = base64;
-          await sendDataToGAS(payload, form);
-        });
-      } else {
-        await sendDataToGAS(payload, form);
-      }
+      await sendDataToGAS(payload, form);
     }
 
     async function sendDataToGAS(payload, form) {
@@ -240,13 +315,20 @@
         const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
           body: JSON.stringify(payload),
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain circumvents strict CORS preflight
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         
         const result = await response.json();
         if(result.success) {
            showToast();
            form.reset();
+           // Sembunyikan dan hapus preview foto dari UI
+           document.getElementById('previewNup').classList.add('hidden');
+           document.getElementById('previewNup').src = "";
+           document.getElementById('fotoDataNup').value = "";
+           document.getElementById('previewNonNup').classList.add('hidden');
+           document.getElementById('previewNonNup').src = "";
+           document.getElementById('fotoDataNonNup').value = "";
         } else {
            alert("Gagal: " + result.message);
         }
@@ -261,8 +343,9 @@
       }
     }
 
-    document.getElementById('formNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNup', 'fotoNup'));
-    document.getElementById('formNonNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNonNup', 'fotoNonNup'));
+    // Pasang Event Listener pada Form Submit
+    document.getElementById('formNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNup'));
+    document.getElementById('formNonNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNonNup'));
 
   </script>
 </body>
