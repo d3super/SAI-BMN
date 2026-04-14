@@ -2,196 +2,187 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sensus BMN - Form Petugas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SAI BMN Sensus</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
-    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="pb-12">
-
+<body class="pb-10">
+  
   <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
     <div class="max-w-md mx-auto flex items-center">
       <i class="ph ph-scan text-2xl mr-2"></i>
-      <h1 class="text-xl font-semibold">SAI BMN Sensus</h1>
+      <h1 class="text-xl font-bold">SAI BMN Sensus</h1>
     </div>
   </header>
 
+  <div id="notification-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
   <main class="max-w-md mx-auto mt-4 px-4">
-    <!-- Tabs -->
-    <div class="flex border-b border-gray-200 mb-6">
+    <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-xl">
       <button id="tabNUP" class="w-1/2 py-3 text-center tab-active transition" onclick="switchTab('nup')">Data BMN NUP</button>
       <button id="tabNonNUP" class="w-1/2 py-3 text-center text-gray-500 transition" onclick="switchTab('nonnup')">Data NON NUP</button>
     </div>
 
-    <!-- Notification Container (Modern Toast) -->
-    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-3 w-[90%] max-w-sm pointer-events-none"></div>
-
-    <!-- FORM NUP -->
-    <form id="formNup" class="space-y-4">
+    <form id="formNup" class="space-y-5 bg-white p-5 rounded-xl shadow-sm border border-gray-100" onsubmit="handleFormSubmit(event, 'formNup')">
       <input type="hidden" name="action" value="submitNUP">
       
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
+      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang</label>
-          <input type="text" name="kdBarang" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:border-blue-500 focus:ring focus:ring-blue-200 outline-none">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Kode Barang</label>
+          <input type="text" name="kdBarang" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">NUP</label>
-          <div class="flex space-x-2">
-            <input type="text" name="nup" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:border-blue-500 focus:ring outline-none">
-            <button type="button" onclick="autoFillNup()" class="bg-blue-100 text-blue-700 px-3 rounded font-medium hover:bg-blue-200 text-sm flex items-center">
-              <i class="ph ph-magnifying-glass mr-1"></i> Cek
+          <label class="block text-xs font-semibold text-gray-600 mb-1">NUP</label>
+          <div class="flex gap-2">
+            <input type="text" name="nup" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <button type="button" onclick="autoFillNup()" class="bg-blue-50 text-blue-600 px-3 rounded-lg border border-blue-100 hover:bg-blue-100 flex items-center justify-center">
+              <i class="ph ph-magnifying-glass text-lg"></i>
             </button>
           </div>
         </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-400 mb-1">Nama Barang (Auto)</label>
+        <input type="text" name="nmBarang" readonly class="w-full bg-gray-50 border border-gray-200 text-gray-500 rounded-lg p-2.5 text-sm cursor-not-allowed">
+      </div>
+
+      <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-lg space-y-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
-          <input type="text" name="nmBarang" class="w-full border-gray-300 rounded-md shadow-sm p-2 border bg-gray-50 outline-none">
+          <label class="block text-xs font-bold text-blue-800 mb-1 uppercase tracking-wide">Lokasi Master (Data Asli)</label>
+          <input type="text" id="lokMasterNup" readonly placeholder="Klik ikon kaca pembesar di atas..." class="w-full bg-transparent border-none p-0 text-blue-600 text-sm font-medium focus:ring-0 cursor-not-allowed">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Lokasi Fisik (Temuan Saat Ini) *</label>
+          <input type="text" name="lokRuangFisik" required placeholder="Contoh: Gedung A, Ruang Rapat" class="w-full border border-blue-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white shadow-sm">
         </div>
       </div>
 
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
-         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi</label>
-          <select name="kondisi" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none bg-white">
-            <option value="Baik">Baik</option>
-            <option value="Rusak Ringan">Rusak Ringan</option>
-            <option value="Rusak Berat">Rusak Berat</option>
-            <option value="Hilang">Hilang</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Ruang</label>
-          <input type="text" name="lokRuang" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none">
-        </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Kondisi</label>
+        <select name="kondisi" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+          <option value="Baik">Baik</option>
+          <option value="Rusak Ringan">Rusak Ringan</option>
+          <option value="Rusak Berat">Rusak Berat</option>
+          <option value="Hilang">Hilang</option>
+        </select>
       </div>
 
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Foto Fisik</label>
-          <div class="flex flex-col space-y-3">
-            <!-- Tombol untuk buka kamera (Menggantikan input file) -->
-            <button type="button" onclick="openCamera('Nup')" class="bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 rounded-md flex items-center justify-center hover:bg-gray-100 transition font-medium">
-              <i class="ph ph-camera text-xl mr-2"></i> Buka Kamera
-            </button>
-            <!-- Preview Foto -->
-            <img id="previewNup" src="" class="hidden w-full h-auto rounded-md border border-gray-200 shadow-sm object-cover">
-            <!-- Hidden input untuk menampung base64 foto -->
-            <input type="hidden" id="fotoDataNup" name="fotoBase64">
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Petugas</label>
-          <input type="text" name="nmPetugas" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none">
-        </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Petugas</label>
+        <input type="text" name="nmPetugas" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-blue-700 flex justify-center items-center">
-        <span class="btn-text">Kirim Data</span>
-        <div class="loader hidden ml-2"></div>
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
+        <label class="block text-xs font-semibold text-gray-600 mb-2">Foto Fisik BMN</label>
+        <input type="hidden" name="fotoBase64" id="fotoDataNup">
+        <img id="previewNup" class="hidden w-full h-48 object-cover rounded-lg mb-3 shadow-sm border border-gray-200">
+        <button type="button" onclick="openCamera('Nup')" class="w-full py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg flex justify-center items-center gap-2 hover:bg-gray-200 transition">
+          <i class="ph ph-camera text-xl"></i> Ambil Foto Baru
+        </button>
+      </div>
+
+      <button type="submit" class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition flex justify-center items-center">
+        <span class="btn-text">Kirim Hasil Sensus</span>
+        <i class="ph ph-spinner animate-spin hidden loader ml-2 text-xl"></i>
       </button>
     </form>
 
-    <!-- FORM NON NUP -->
-    <form id="formNonNup" class="space-y-4 hidden">
+
+    <form id="formNonNup" class="space-y-5 bg-white p-5 rounded-xl shadow-sm border border-gray-100 hidden" onsubmit="handleFormSubmit(event, 'formNonNup')">
       <input type="hidden" name="action" value="submitNonNUP">
-      <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
+      
+      <input type="hidden" name="kdBarang" value="NON-NUP">
+      <input type="hidden" name="nup" id="autoNupHidden">
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Barang Temuan</label>
+        <input type="text" name="nmBarang" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
-          <input type="text" name="nmBarang" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:border-blue-500 focus:ring outline-none">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Merk</label>
+          <input type="text" name="merk" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none text-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Merk/Tipe</label>
-          <input type="text" name="merk" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:border-blue-500 outline-none">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Tipe</label>
+          <input type="text" name="tipe" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none text-sm">
         </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Lokasi Fisik Ruangan</label>
+        <input type="text" name="lokRuangFisik" required class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kondisi</label>
-          <select name="kondisi" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none bg-white">
-            <option value="Baik">Baik</option>
-            <option value="Rusak Ringan">Rusak Ringan</option>
-            <option value="Rusak Berat">Rusak Berat</option>
-            <option value="Hilang">Hilang</option>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Kondisi</label>
+          <select name="kondisi" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none text-sm bg-white">
+            <option>Baik</option><option>Rusak Ringan</option><option>Rusak Berat</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Ruang</label>
-          <input type="text" name="lokRuang" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Petugas</label>
+          <input type="text" name="nmPetugas" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none text-sm">
         </div>
       </div>
 
-       <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Foto Fisik</label>
-          <div class="flex flex-col space-y-3">
-            <button type="button" onclick="openCamera('NonNup')" class="bg-gray-50 border border-gray-300 text-gray-700 py-3 px-4 rounded-md flex items-center justify-center hover:bg-gray-100 transition font-medium">
-              <i class="ph ph-camera text-xl mr-2"></i> Buka Kamera
-            </button>
-            <img id="previewNonNup" src="" class="hidden w-full h-auto rounded-md border border-gray-200 shadow-sm object-cover">
-            <input type="hidden" id="fotoDataNonNup" name="fotoBase64">
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Petugas</label>
-          <input type="text" name="nmPetugas" required class="w-full border-gray-300 rounded-md shadow-sm p-2 border outline-none">
-        </div>
+      <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
+        <label class="block text-xs font-semibold text-gray-600 mb-2">Foto Fisik BMN</label>
+        <input type="hidden" name="fotoBase64" id="fotoDataNonNup">
+        <img id="previewNonNup" class="hidden w-full h-48 object-cover rounded-lg mb-3 shadow-sm border border-gray-200">
+        <button type="button" onclick="openCamera('NonNup')" class="w-full py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg flex justify-center items-center gap-2 hover:bg-gray-200 transition">
+          <i class="ph ph-camera text-xl"></i> Ambil Foto Baru
+        </button>
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg shadow hover:bg-blue-700 flex justify-center items-center">
-        <span class="btn-text">Kirim Data</span>
-        <div class="loader hidden ml-2"></div>
+      <button type="submit" class="w-full py-3.5 bg-purple-600 text-white font-bold rounded-xl shadow-md hover:bg-purple-700 transition flex justify-center items-center">
+        <span class="btn-text">Kirim Data Temuan</span>
+        <i class="ph ph-spinner animate-spin hidden loader ml-2 text-xl"></i>
       </button>
     </form>
-
   </main>
 
-  <!-- MODAL KAMERA -->
-  <div id="cameraModal" class="hidden fixed inset-0 bg-black z-[100] flex flex-col">
-    <div class="flex justify-between items-center p-4 text-white bg-black/50 absolute top-0 left-0 right-0 z-10">
-      <h2 class="text-lg font-semibold">Kamera Aktif</h2>
-      <button type="button" onclick="closeCamera()" class="p-2 bg-gray-800 rounded-full hover:bg-gray-700">
-        <i class="ph ph-x text-xl"></i>
-      </button>
+  <div id="cameraModal" class="fixed inset-0 bg-black z-[200] hidden flex-col">
+    <div class="flex justify-between items-center p-4 text-white bg-black/50 absolute top-0 w-full z-10">
+      <span class="font-bold">Ambil Foto BMN</span>
+      <button type="button" onclick="closeCamera()" class="p-2 bg-white/20 rounded-full"><i class="ph ph-x text-xl"></i></button>
     </div>
-    
-    <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-      <video id="videoStream" autoplay playsinline class="w-full h-full object-cover"></video>
+    <video id="cameraVideo" class="flex-1 w-full h-full object-cover" autoplay playsinline></video>
+    <div class="p-6 bg-black absolute bottom-0 w-full flex justify-center pb-10">
+      <button type="button" onclick="capturePhoto()" class="w-16 h-16 bg-white rounded-full border-4 border-gray-400 active:scale-95 transition-transform"></button>
     </div>
-    
-    <div class="p-6 bg-black flex justify-center pb-12">
-      <!-- Tombol Shutter -->
-      <button type="button" onclick="capturePhoto()" class="w-16 h-16 bg-white rounded-full border-4 border-gray-400 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)] active:scale-95 active:bg-gray-200 transition">
-      </button>
-    </div>
-    <!-- Canvas disembunyikan, hanya digunakan untuk memproses frame video menjadi gambar -->
     <canvas id="cameraCanvas" class="hidden"></canvas>
   </div>
 
   <script>
-    // --- CONFIGURATION ---
+    // 🔴 GANTI DENGAN URL DEPLOYMENT GOOGLE APPS SCRIPT ANDA
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx3eKLP3sxt-CWv8BbwqlkNRqBgDZvib_Z4kKDUkM9nWQnfx9gJiD_bMkchj4fvMbfy/exec"; 
 
-    // --- UI LOGIC ---
+    let currentFormType = '';
+    let videoStream = null;
+
+    // --- TAB SWITCHER ---
     function switchTab(tab) {
       document.getElementById('formNup').classList.toggle('hidden', tab !== 'nup');
       document.getElementById('formNonNup').classList.toggle('hidden', tab !== 'nonnup');
-      
       document.getElementById('tabNUP').className = tab === 'nup' ? 'w-1/2 py-3 text-center tab-active transition' : 'w-1/2 py-3 text-center text-gray-500 transition';
       document.getElementById('tabNonNUP').className = tab === 'nonnup' ? 'w-1/2 py-3 text-center tab-active transition' : 'w-1/2 py-3 text-center text-gray-500 transition';
     }
 
-    // --- MODERN NOTIFICATION SYSTEM ---
+    // --- MODERN TOAST NOTIFICATION ---
     function showNotification(message, type = 'success') {
       const container = document.getElementById('notification-container');
       const toast = document.createElement('div');
       
-      // Styling dasar animasi & layout
       toast.className = `transform transition-all duration-300 ease-out -translate-y-10 opacity-0 flex items-center p-4 bg-white rounded-xl shadow-xl border-l-4 pointer-events-auto`;
       
       let iconHtml = '';
@@ -206,20 +197,14 @@
         iconHtml = '<div class="text-blue-500 bg-blue-50 rounded-full p-1.5 mr-3"><i class="ph-fill ph-info text-2xl"></i></div>';
       }
       
-      toast.innerHTML = `
-        ${iconHtml}
-        <div class="text-sm font-semibold text-gray-700 leading-snug">${message}</div>
-      `;
-      
+      toast.innerHTML = `${iconHtml}<div class="text-sm font-semibold text-gray-700 leading-snug">${message}</div>`;
       container.appendChild(toast);
       
-      // Trigger Slide-in Animation
       requestAnimationFrame(() => {
         toast.classList.remove('-translate-y-10', 'opacity-0');
         toast.classList.add('translate-y-0', 'opacity-100');
       });
       
-      // Auto-remove setelah 4 detik dengan Slide-out Animation
       setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
         toast.classList.add('-translate-y-10', 'opacity-0');
@@ -227,7 +212,7 @@
       }, 4000);
     }
 
-    // --- API LOGIC (Auto Fill) ---
+    // --- AUTO FILL API (MENCARI DATA LOKASI MASTER) ---
     async function autoFillNup() {
       const form = document.getElementById('formNup');
       const kdBarang = form.kdBarang.value;
@@ -240,87 +225,62 @@
         
         if(result.success) {
            form.nmBarang.value = result.data.nmBarang;
-           form.lokRuang.value = result.data.lokRuang; 
+           // MENGISI LOKASI MASTER (Hanya baca)
+           document.getElementById('lokMasterNup').value = result.data.lokRuang; 
            showNotification("Data BMN ditemukan!", "success");
         } else {
            showNotification(result.message, "error");
            form.nmBarang.value = "";
-           form.lokRuang.value = ""; 
+           document.getElementById('lokMasterNup').value = ""; 
         }
       } catch (err) {
-        console.error("Auto-fill fail:", err);
-        showNotification("Gagal menghubungi server database.", "error");
+        showNotification("Gagal menghubungi server.", "error");
       }
     }
 
     // --- CAMERA LOGIC (WebRTC) ---
-    let currentCameraTarget = '';
-    let videoStream = null;
-
-    function openCamera(target) {
-      currentCameraTarget = target;
+    function openCamera(formType) {
+      currentFormType = formType;
       const modal = document.getElementById('cameraModal');
-      const video = document.getElementById('videoStream');
-      
+      const video = document.getElementById('cameraVideo');
       modal.classList.remove('hidden');
+      modal.classList.add('flex');
 
-      // Meminta akses kamera (Kamera belakang jika tersedia pada HP)
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(stream => {
           videoStream = stream;
           video.srcObject = stream;
         })
         .catch(err => {
-          console.error("Gagal akses kamera:", err);
-          showNotification("Gagal mengakses kamera. Pastikan browser Anda memiliki izin kamera.", "error");
+          showNotification("Gagal mengakses kamera. Izinkan akses kamera di browser.", "error");
           closeCamera();
         });
     }
 
     function closeCamera() {
-      const modal = document.getElementById('cameraModal');
-      modal.classList.add('hidden');
-      
-      // Matikan stream kamera saat modal ditutup
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-      }
+      if(videoStream) videoStream.getTracks().forEach(track => track.stop());
+      document.getElementById('cameraModal').classList.add('hidden');
+      document.getElementById('cameraModal').classList.remove('flex');
     }
 
     function capturePhoto() {
-      const video = document.getElementById('videoStream');
+      const video = document.getElementById('cameraVideo');
       const canvas = document.getElementById('cameraCanvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Setup ukuran kompresi gambar (maksimal 800px)
-      const MAX_WIDTH = 800;
-      let width = video.videoWidth;
-      let height = video.videoHeight;
+      // Kompresi gambar menjadi base64 (Kualitas 0.6)
+      const base64Image = canvas.toDataURL('image/jpeg', 0.6);
       
-      if (width > MAX_WIDTH) {
-        height *= MAX_WIDTH / width;
-        width = MAX_WIDTH;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Gambar frame saat ini ke canvas
-      ctx.drawImage(video, 0, 0, width, height);
-      
-      // Konversi canvas ke base64 (JPEG, quality 0.6 untuk kompresi ukuran file)
-      const dataURL = canvas.toDataURL('image/jpeg', 0.6);
-      
-      // Tampilkan preview di form
-      const previewImg = document.getElementById('preview' + currentCameraTarget);
-      previewImg.src = dataURL;
-      previewImg.classList.remove('hidden');
-      
-      // Simpan data base64 ke input hidden
-      document.getElementById('fotoData' + currentCameraTarget).value = dataURL;
+      document.getElementById(`fotoData${currentFormType}`).value = base64Image;
+      const preview = document.getElementById(`preview${currentFormType}`);
+      preview.src = base64Image;
+      preview.classList.remove('hidden');
       
       closeCamera();
+      showNotification("Foto berhasil diambil!", "success");
     }
 
     // --- FORM SUBMIT LOGIC ---
@@ -333,29 +293,20 @@
       const formData = new FormData(form);
       const payload = Object.fromEntries(formData.entries());
 
-      // Validasi manual apakah foto sudah diambil
       if (!payload.fotoBase64) {
-         showNotification("Silakan ambil foto fisik terlebih dahulu melalui tombol Kamera!", "error");
-         return;
+         return showNotification("Silakan ambil foto fisik terlebih dahulu!", "error");
       }
 
-      // --- GENERATE ID_BMN OTOMATIS ---
-      if (formId === 'formNup') {
-        // Format untuk BMN: KodeBarang-NUP
-        payload.id_bmn = `${payload.kdBarang}-${payload.nup}`;
-      } else {
-        // Format untuk NON NUP: NON-Timestamp
-        payload.id_bmn = `NON-${Date.now()}`;
+      // Generate ID untuk NON NUP
+      if (formId === 'formNonNup') {
+        const uniqueId = Math.floor(1000 + Math.random() * 9000);
+        payload.nup = `NEW-${uniqueId}`;
       }
 
-      btnText.innerText = "Mengunggah...";
+      btnText.innerText = "Memproses...";
       loader.classList.remove('hidden');
       form.querySelector('button[type="submit"]').disabled = true;
 
-      await sendDataToGAS(payload, form);
-    }
-
-    async function sendDataToGAS(payload, form) {
       try {
         const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
@@ -365,33 +316,21 @@
         
         const result = await response.json();
         if(result.success) {
-           showNotification("Data berhasil dikirim & disimpan!", "success");
+           showNotification("Data sensus berhasil dikirim!", "success");
            form.reset();
-           // Sembunyikan dan hapus preview foto dari UI
-           document.getElementById('previewNup').classList.add('hidden');
-           document.getElementById('previewNup').src = "";
-           document.getElementById('fotoDataNup').value = "";
-           document.getElementById('previewNonNup').classList.add('hidden');
-           document.getElementById('previewNonNup').src = "";
-           document.getElementById('fotoDataNonNup').value = "";
+           document.getElementById(`preview${formId === 'formNup' ? 'Nup' : 'NonNup'}`).classList.add('hidden');
+           if(formId === 'formNup') document.getElementById('lokMasterNup').value = "";
         } else {
            showNotification("Gagal: " + result.message, "error");
         }
       } catch (error) {
-        showNotification("Terjadi kesalahan jaringan saat mengirim data.", "error");
+        showNotification("Kesalahan jaringan. Gagal mengirim.", "error");
       } finally {
-        const btnText = form.querySelector('.btn-text');
-        const loader = form.querySelector('.loader');
-        btnText.innerText = "Kirim Data";
+        btnText.innerText = formId === 'formNup' ? "Kirim Hasil Sensus" : "Kirim Data Temuan";
         loader.classList.add('hidden');
         form.querySelector('button[type="submit"]').disabled = false;
       }
     }
-
-    // Pasang Event Listener pada Form Submit
-    document.getElementById('formNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNup'));
-    document.getElementById('formNonNup').addEventListener('submit', (e) => handleFormSubmit(e, 'formNonNup'));
-
   </script>
 </body>
 </html>
