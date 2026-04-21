@@ -124,7 +124,7 @@
            form.nmBarang.value = result.data.nmBarang; document.getElementById('lokMasterNup').value = result.data.lokRuang; 
            const bmnStatus = String(result.data.status).trim();
            if (bmnStatus === "Pending" || bmnStatus === "Telah Diverifikasi") {
-               showNotification(`DITOLAK: BMN ini sudah disensus (${bmnStatus})!`, "error");
+               showNotification(`WARNING: BMN ini sudah disensus (${bmnStatus})!`, "error");
                btnSubmit.disabled = true; btnSubmit.classList.add('bg-gray-400', 'cursor-not-allowed'); btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                btnText.innerText = `Sudah Disensus (${bmnStatus})`;
            } else { showNotification("Data BMN ditemukan! Silakan isi lokasi fisik.", "success"); unlockForm(); }
