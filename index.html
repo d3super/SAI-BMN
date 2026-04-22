@@ -14,8 +14,24 @@
 </head>
 <body class="pb-10">
   
-  <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50">
-    <div class="max-w-md mx-auto flex items-center"><i class="ph ph-scan text-2xl mr-2"></i><h1 class="text-xl font-bold">SAI BMN Sensus</h1></div>
+  <header class="bg-blue-600 text-white py-4 px-6 shadow-md sticky top-0 z-50">
+    <div class="max-w-md mx-auto flex items-center justify-center gap-0">
+      
+      <div class="flex-shrink-0 flex items-center justify-center">
+        <img 
+          src="https://drive.google.com/thumbnail?id=1IWJxuDQtcbIqu9WX3DZi6ibTtFQpIvle&sz=w800" 
+          alt="Logo" 
+          class="h-16 w-16 object-contain drop-shadow-sm -mr-2"
+          onerror="this.style.display='none';"
+        >
+      </div>
+
+      <div class="flex flex-col justify-center text-left">
+        <h1 class="text-2xl font-bold leading-none tracking-tight mb-1">SAI BMN Sensus</h1>
+        <span class="text-[9px] font-semibold text-blue-100 tracking-widest leading-none">Kanwil DJPb Provinsi Lampung</span>
+      </div>
+
+    </div>
   </header>
 
   <div id="notification-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none"></div>
@@ -175,5 +191,12 @@
       }
     }
   </script>
+  <footer class="mt-2 text-center px-4">
+    <div class="max-w-md mx-auto pt-2">
+      <p class="text-[9px] text-gray-400 font-medium tracking-widest">
+        Powered by Bagian Umum Kanwil DJPb Provinsi Lampung
+      </p>
+    </div>
+  </footer>
 </body>
 </html>
